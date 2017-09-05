@@ -22,7 +22,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +42,8 @@ public class MainActivity extends AppCompatActivity
      private FloatingActionButton save_button;
     private String currentPhotoPath;
 
+    private Uri current_file_uri;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +55,7 @@ public class MainActivity extends AppCompatActivity
         share_button=(FloatingActionButton) findViewById(R.id.share_button);
         save_button=(FloatingActionButton) findViewById(R.id.save_button);
 
-        Picasso.with(this).load(R.drawable.moustache).into(image_holder);
+        Glide.with(this).load(R.drawable.moustache).into(image_holder);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -113,6 +116,7 @@ public class MainActivity extends AppCompatActivity
              {
 
                  Uri photo_uri= FileProvider.getUriForFile(this,"com.sctcs.jacobin.moustachios",temp_file);
+                 current_file_uri=photo_uri;
                  photo_intent.putExtra(MediaStore.EXTRA_OUTPUT,photo_uri);
                  startActivityForResult(photo_intent, PHOTO_REQUEST_ID);
              }
@@ -138,13 +142,13 @@ public class MainActivity extends AppCompatActivity
     {
            if(requestCode==PHOTO_REQUEST_ID && resultCode==RESULT_OK)
            {
-               scale_bitmap(currentPhotoPath);
+             LoadBitmap(currentPhotoPath);
            }
     }
 
 
 
-    private void scale_bitmap(String  path)
+  /*  private void scale_bitmap(String  path)
     {
         int target_width=image_holder.getMaxWidth();
         int target_height=image_holder.getMaxHeight();
@@ -163,5 +167,13 @@ public class MainActivity extends AppCompatActivity
         Bitmap bitmap=BitmapFactory.decodeFile(path,moptions);
         image_holder.setImageBitmap(bitmap);
 
-    }
+    }*/
+
+  private void LoadBitmap(String Path)
+  {
+      int target_width=image_holder.getMaxWidth();
+      int target_height=image_holder.getMaxHeight();
+     Glide.with(this).load(current_file_uri).override(target_width,target_height).into(image_holder);
+  }
 }
+
