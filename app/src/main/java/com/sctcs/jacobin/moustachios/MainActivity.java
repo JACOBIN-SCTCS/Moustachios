@@ -1,6 +1,7 @@
 package com.sctcs.jacobin.moustachios;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -20,15 +21,20 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -38,9 +44,8 @@ public class MainActivity extends AppCompatActivity
 
      private ImageView image_holder;
      private ImageButton button;
-     private FloatingActionButton share_button;
-     private FloatingActionButton save_button;
-    private String currentPhotoPath;
+     private String currentPhotoPath=null;
+     private ProgressBar progressBar;
 
     private Uri current_file_uri;
 
@@ -52,8 +57,7 @@ public class MainActivity extends AppCompatActivity
 
         image_holder=(ImageView) findViewById(R.id.imageView);
         button=(ImageButton) findViewById(R.id.imageButton);
-        share_button=(FloatingActionButton) findViewById(R.id.share_button);
-        save_button=(FloatingActionButton) findViewById(R.id.save_button);
+        progressBar=(ProgressBar) findViewById(R.id.progressBar) ;
 
         Glide.with(this).load(R.drawable.moustache).into(image_holder);
         button.setOnClickListener(new View.OnClickListener() {
@@ -142,38 +146,47 @@ public class MainActivity extends AppCompatActivity
     {
            if(requestCode==PHOTO_REQUEST_ID && resultCode==RESULT_OK)
            {
-             LoadBitmap(currentPhotoPath);
+
+             LoadBitmap();
            }
     }
 
 
 
-  /*  private void scale_bitmap(String  path)
-    {
-        int target_width=image_holder.getMaxWidth();
-        int target_height=image_holder.getMaxHeight();
-        BitmapFactory.Options moptions= new BitmapFactory.Options();
-        moptions.inJustDecodeBounds=true;
-        BitmapFactory.decodeFile(path,moptions);
-
-        int photo_width=moptions.outWidth;
-        int photo_height=moptions.outHeight;
-
-
-        int scaleFactor=Math.max(photo_width/target_width,photo_height/target_height);
-        moptions.inJustDecodeBounds=false;
-        moptions.inSampleSize=scaleFactor;
-
-        Bitmap bitmap=BitmapFactory.decodeFile(path,moptions);
-        image_holder.setImageBitmap(bitmap);
-
-    }*/
-
-  private void LoadBitmap(String Path)
+  private void LoadBitmap()
   {
       int target_width=image_holder.getMaxWidth();
       int target_height=image_holder.getMaxHeight();
-     Glide.with(this).load(current_file_uri).override(target_width,target_height).into(image_holder);
+      progressBar.setVisibility(View.VISIBLE);
+
+      Glide.with(this).load(current_file_uri).listener(new RequestListener<Uri, GlideDrawable>() {
+          @Override
+          public boolean onException(Exception e, Uri model, Target<GlideDrawable> target, boolean isFirstResource) {
+              return false;
+          }
+
+          @Override
+          public boolean onResourceReady(GlideDrawable resource, Uri model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+              progressBar.setVisibility(View.GONE);
+              return false;
+          }
+      }).override(target_width,target_height).into(image_holder);
   }
+
+    public void deleteFile(Context context, String Photopath)
+    {   if(Photopath!=null) {
+        File imageFile = new File(Photopath);
+        boolean deleted = imageFile.delete();
+
+       }
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        deleteFile(this,currentPhotoPath);
+    }
 }
+
 
